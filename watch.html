@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+<title>Live Stream • HesGoal & OvoGoal</title>
+
+<style>
+:root{
+  --primary:#f59e0b;--primary-dark:#b45309;--primary-light:#fbbf24;
+  --bg:#0b1120;--bg2:#0f172a;--surface:#1e293b;--surface2:#273449;
+  --border:#334155;--border-primary:rgba(245,158,11,.3);
+  --text:#f1f5f9;--muted:#94a3b8;--dim:#64748b;
+  --radius:14px;--shadow:0 8px 24px rgba(0,0,0,.5);
+  --shadow-primary:0 8px 32px rgba(245,158,11,.2);
+  --grad:linear-gradient(135deg,#f59e0b,#b45309);
+}
+*,::before,::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px;scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{font-family:'Inter',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;min-height:100svh;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;background:radial-gradient(ellipse at top,rgba(245,158,11,.12) 0%,transparent 50%),radial-gradient(ellipse at bottom right,rgba(245,158,11,.06) 0%,transparent 50%);pointer-events:none;z-index:0}
+img{max-width:100%;display:block}
+a{color:inherit;text-decoration:none}
+
+.nav{position:sticky;top:0;z-index:100;background:rgba(11,17,32,.9);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid var(--border);padding:0 20px;height:64px;display:flex;align-items:center;justify-content:space-between}
+.nav-brand{display:flex;align-items:center;gap:10px;color:#fff;font-weight:900;font-size:22px;letter-spacing:-.5px}
+.nav-logo{width:36px;height:36px;background:var(--grad);border-radius:10px;display:grid;place-items:center;font-size:20px;font-weight:900;color:#fff;font-family:'Georgia',serif;box-shadow:var(--shadow-primary)}
+.nav-tag{background:rgba(245,158,11,.15);color:var(--primary-light);font-size:11px;font-weight:800;padding:5px 11px;border-radius:6px;letter-spacing:.8px;border:1px solid var(--border-primary)}
+
+.wrap{max-width:1440px;margin:0 auto;padding:24px 20px;position:relative;z-index:1}
+
+/* Ads Base Style */
+.ad-slot{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:opacity .3s, transform .3s;}
+.ad-slot.hidden-ad{opacity:0;transform:scale(.95);pointer-events:none;height:0 !important;margin:0 !important;padding:0 !important;border:0 !important;overflow:hidden;}
+.ad-close{position:absolute;top:4px;right:4px;z-index:10;width:24px;height:24px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;border:1px solid rgba(255,255,255,.25);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;line-height:1;font-family:inherit;transition:background .2s;}
+.ad-close:hover{background:rgba(245,158,11,.85);}
+
+/* Main Layout: 3 Columns (Left Ad | Content | Right Ad) */
+.main-layout{
+  display:flex;
+  gap:20px;
+  align-items:flex-start;
+  justify-content:center;
+}
+.content-center{
+  flex:1;
+  min-width:0;
+  max-width:1100px; /* keeps video reasonable size */
+  display:flex;
+  flex-direction:column;
+  gap:20px;
+}
+
+/* Left Sticky 160x600 */
+.ad-sticky-left{
+  position:sticky;
+  top:80px;
+  width:160px;
+  flex-shrink:0;
+  height:600px;
+  display:none; /* hidden on mobile/tablet */
+}
+.ad-sticky-left .ad-vertical{width:160px;height:600px;position:relative;}
+.ad-sticky-left iframe,.ad-sticky-left ins{max-width:100%;}
+
+/* Right Sticky 300x250 */
+.ad-sticky-right{
+  position:sticky;
+  top:80px;
+  width:300px;
+  flex-shrink:0;
+  display:none; /* hidden on mobile/tablet */
+}
+.ad-sticky-right .ad-square{width:300px;height:250px;position:relative;}
+.ad-sticky-right iframe,.ad-sticky-right ins{max-width:100%;}
+
+/* Top 728x90 */
+.ad-top-banner{
+  width:728px;
+  max-width:100%;
+  height:90px;
+  margin:0 auto;
+}
+.ad-top-banner iframe,.ad-top-banner ins{max-width:100%;}
+
+/* Match Header */
+.match-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  background:linear-gradient(180deg,var(--surface) 0%,var(--bg2) 100%);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:24px;
+  box-shadow:var(--shadow);
+}
+.team-side{display:flex;flex-direction:column;align-items:center;gap:10px;flex:1;text-align:center}
+.team-side img{width:64px;height:64px;object-fit:contain;filter:drop-shadow(0 4px 12px rgba(0,0,0,.5))}
+.team-side .name{font-size:clamp(16px,3vw,22px);font-weight:900;color:#fff;}
+.match-info{display:flex;flex-direction:column;align-items:center;gap:4px;padding:0 20px;}
+.live-badge{background:var(--primary);color:#fff;font-size:12px;font-weight:900;padding:6px 14px;border-radius:20px;letter-spacing:1px;display:flex;align-items:center;gap:6px;text-transform:uppercase;}
+.live-dot{width:6px;height:6px;background:#fff;border-radius:50%;animation:blink 1.2s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.league-name{font-size:13px;color:var(--muted);font-weight:700;margin-top:4px;text-transform:uppercase;letter-spacing:.5px;}
+
+/* Video Player */
+.player-container{
+  position:relative;
+  width:100%;
+  aspect-ratio:16/9;
+  background:#000;
+  border-radius:var(--radius);
+  overflow:hidden;
+  border:1px solid var(--border);
+  box-shadow:var(--shadow);
+}
+.player-container iframe{
+  position:absolute;
+  top:0;left:0;
+  width:100%;height:100%;
+  border:none;
+}
+
+/* Watch Page Article */
+.article{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:24px;
+  position:relative;
+  z-index:1;
+}
+.article h2{font-size:20px;font-weight:900;color:#fff;margin-bottom:12px;display:flex;align-items:center;gap:10px;}
+.article h2::before{content:"";width:4px;height:20px;background:var(--grad);border-radius:2px;}
+.article p{font-size:14px;color:#cbd5e1;line-height:1.7;margin-bottom:12px;}
+
+/* Bottom Sticky 728x90 */
+.ad-sticky-bottom{
+  position:fixed;
+  bottom:0;left:0;right:0;
+  z-index:999;
+  display:flex;
+  justify-content:center;
+  padding:0;
+  background:transparent;
+}
+.ad-sticky-bottom.hidden-ad{display:none !important;}
+.ad-sticky-bottom .ad-inner{
+  position:relative;
+  width:728px;max-width:100%;height:90px;
+  margin:0 auto;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius) var(--radius) 0 0;
+  overflow:hidden;
+}
+.ad-sticky-bottom .ad-close{top:4px;right:4px;background:rgba(0,0,0,.55);width:24px;height:24px;font-size:16px;}
+
+/* Responsive */
+@media(min-width:1400px){
+  .ad-sticky-left{display:block;}
+}
+@media(min-width:1200px){
+  .ad-sticky-right{display:block;}
+}
+@media(max-width:860px){
+  .ad-top-banner{display:none;} /* Hide top banner on mobile to save space */
+}
+@media(max-width:600px){
+  .match-header{padding:16px;flex-direction:column;gap:16px;}
+  .match-info{padding:12px 0;order:-1;}
+  .team-side img{width:48px;height:48px;}
+  .ad-sticky-bottom .ad-inner{height:90px;border-radius:0;border-left:none;border-right:none;border-bottom:none;}
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="index.html" class="nav-brand">
+    <div class="nav-logo" aria-hidden="true">H</div>
+    HesGoal
+  </a>
+  <span class="nav-tag" aria-hidden="true">FREE HD</span>
+</nav>
+
+<main class="wrap">
+  
+  <div class="main-layout">
+
+    <!-- LEFT STICKY 160x600 AD -->
+    <aside class="ad-sticky-left ad-slot" id="adStickyLeft">
+      <button type="button" class="ad-close" data-ad="left" aria-label="Close ad">×</button>
+      <div class="ad-vertical">
+        <script type="text/javascript">
+          atOptions = {
+            'key' : '8460d979eaa04e23e84499b613e6aca9',
+            'format' : 'iframe',
+            'height' : 600,
+            'width' : 160,
+            'params' : {}
+          };
+        </script>
+        <script type="text/javascript" src="https://czernik.org/22/8460d979eaa04e23e84499b613e6aca9"></script>
+      </div>
+    </aside>
+
+    <!-- CENTER CONTENT (Video + Top Ad + Info) -->
+    <div class="content-center">
+      
+      <!-- TOP 728x90 AD -->
+      <div class="ad-slot ad-top-banner" id="adTopBanner">
+        <button type="button" class="ad-close" data-ad="top" aria-label="Close ad">×</button>
+        <div style="width:728px;height:90px;max-width:100%;overflow:hidden;">
+          <script type="text/javascript">
+            atOptions = {
+              'key' : '6786ca601524f56715d5859a0fc7658f',
+              'format' : 'iframe',
+              'height' : 90,
+              'width' : 728,
+              'params' : {}
+            };
+          </script>
+          <script type="text/javascript" src="https://czernik.org/22/6786ca601524f56715d5859a0fc7658f"></script>
+        </div>
+      </div>
+
+      <!-- Match Header -->
+      <div class="match-header">
+        <div class="team-side">
+          <img id="homeLogo" src="" alt="Home Team" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 52 52\'%3E%3Crect fill=\'%23334155\' width=\'52\' height=\'52\' rx=\'8\'/%3E%3Ctext x=\'50%25\' y=\'56%25\' text-anchor=\'middle\' dominant-baseline=\'middle\' font-size=\'26\'%3E%E2%9A%BD%3C/text%3E%3C/svg%3E'">
+          <span class="name" id="homeName">Home Team</span>
+        </div>
+        <div class="match-info">
+          <div class="live-badge">
+            <span class="live-dot"></span> LIVE
+          </div>
+          <span class="league-name" id="leagueName">League</span>
+        </div>
+        <div class="team-side">
+          <img id="awayLogo" src="" alt="Away Team" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 52 52\'%3E%3Crect fill=\'%23334155\' width=\'52\' height=\'52\' rx=\'8\'/%3E%3Ctext x=\'50%25\' y=\'56%25\' text-anchor=\'middle\' dominant-baseline=\'middle\' font-size=\'26\'%3E%E2%9A%BD%3C/text%3E%3C/svg%3E'">
+          <span class="name" id="awayName">Away Team</span>
+        </div>
+      </div>
+
+      <!-- Video Player -->
+      <div class="player-container" id="playerContainer">
+        <div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);" id="playerLoading">
+          <div style="text-align:center;">
+            <div style="width:40px;height:40px;border:3px solid rgba(245,158,11,.2);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px;"></div>
+            <p>Loading Stream...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Info Article -->
+      <div class="article">
+        <h2>How to Watch &amp; Stream Details</h2>
+        <p>You are watching the live stream on <strong>HesGoal</strong>. If the stream buffers or stops working, simply refresh this page. The feed will automatically reconnect to the live source.</p>
+        <p>To improve stream quality, ensure you have a stable internet connection and close any unused browser tabs that might be consuming bandwidth.</p>
+      </div>
+
+    </div>
+
+    <!-- RIGHT STICKY 300x250 AD -->
+    <aside class="ad-sticky-right ad-slot" id="adStickyRight">
+      <button type="button" class="ad-close" data-ad="right" aria-label="Close ad">×</button>
+      <div class="ad-square">
+        <script type="text/javascript">
+          atOptions = {
+            'key' : '8c159fd6fcf52c9cd44c80c9f4bbcfc4',
+            'format' : 'iframe',
+            'height' : 250,
+            'width' : 300,
+            'params' : {}
+          };
+        </script>
+        <script type="text/javascript" src="https://czernik.org/22/8c159fd6fcf52c9cd44c80c9f4bbcfc4"></script>
+      </div>
+    </aside>
+
+  </div>
+
+</main>
+
+<!-- BOTTOM STICKY 728x90 AD -->
+<div class="ad-sticky-bottom" id="adStickyBottom">
+  <div class="ad-inner">
+    <button type="button" class="ad-close" data-ad="bottom" aria-label="Close ad">×</button>
+    <div style="width:728px;height:90px;max-width:100%;overflow:hidden;">
+      <script type="text/javascript">
+        atOptions = {
+          'key' : '6786ca601524f56715d5859a0fc7658f',
+          'format' : 'iframe',
+          'height' : 90,
+          'width' : 728,
+          'params' : {}
+        };
+      </script>
+      <script type="text/javascript" src="https://czernik.org/22/6786ca601524f56715d5859a0fc7658f"></script>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  // 1. Parse URL Query Parameters
+  function getQueryParam(param) {
+    var urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(param);
+  }
+
+  var homeName = getQueryParam('t1') || 'Team 1';
+  var awayName = getQueryParam('t2') || 'Team 2';
+  var homeLogo = getQueryParam('logo1') || '';
+  var awayLogo = getQueryParam('logo2') || '';
+  var league = getQueryParam('league') || 'Live Match';
+  var streamUrl = getQueryParam('stream') || '';
+
+  // 2. Inject Data into DOM
+  document.getElementById('homeName').textContent = homeName;
+  document.getElementById('awayName').textContent = awayName;
+  document.getElementById('leagueName').textContent = league;
+  
+  if (homeLogo) document.getElementById('homeLogo').src = homeLogo;
+  if (awayLogo) document.getElementById('awayLogo').src = awayLogo;
+
+  document.title = 'Watch ' + homeName + ' vs ' + awayName + ' • HesGoal Live';
+
+  // 3. Load Stream
+  var playerContainer = document.getElementById('playerContainer');
+  if (streamUrl) {
+    playerContainer.innerHTML = '<iframe src="' + streamUrl + '" allowfullscreen allow="autoplay; fullscreen; picture-in-picture" scrolling="no"></iframe>';
+  } else {
+    playerContainer.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--dim);font-weight:bold;padding:20px;text-align:center;">Stream not available yet. Please check back at kick-off.</div>';
+  }
+
+  // 4. Ad Close Logic (For all ads)
+  var closeButtons = document.querySelectorAll('.ad-close');
+  closeButtons.forEach(function(btn){
+    btn.addEventListener('click', function(e){
+      e.stopPropagation();
+      e.preventDefault();
+      var adId = btn.getAttribute('data-ad');
+      var adContainer;
+      
+      if (adId === 'bottom') adContainer = document.getElementById('adStickyBottom');
+      else if (adId === 'top') adContainer = document.getElementById('adTopBanner');
+      else if (adId === 'left') adContainer = document.getElementById('adStickyLeft');
+      else if (adId === 'right') adContainer = document.getElementById('adStickyRight');
+      
+      if (!adContainer) return;
+
+      adContainer.classList.add('hidden-ad');
+
+      setTimeout(function(){
+        adContainer.classList.remove('hidden-ad');
+      }, 2000);
+    });
+  });
+
+})();
+</script>
+
+</body>
+</html>
